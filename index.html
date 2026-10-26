@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-FinStudent Dashboard - Quản Lý Tài Chính Sinh Viên Pro</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; }
+        .focus-mint:focus { outline: none; border-color: #10B981; ring: 2px; --tw-ring-color: #10B981; }
+        .typing-effect { border-right: 2px solid #10B981; animation: blink 0.75s step-end infinite; }
+        @keyframes blink { from, to { border-color: transparent } 50% { border-color: #10B981; } }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #F1F5F9; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-800">
+
+    <!-- HEADER -->
+    <header class="bg-[#0F2043] text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-between text-xl font-black justify-center shadow-inner">
+                    🎓
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        AI-FinStudent <span class="text-xs font-semibold px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full">Pro Edition</span>
+                    </h1>
+                    <p class="text-xs text-slate-300">Quản lý tài chính cá nhân & Lập kế hoạch thông minh cho sinh viên</p>
+                </div>
+            </div>
+            <div class="hidden sm:flex items-center gap-2 text-xs bg-slate-800/60 px-3 py-1.5 rounded-lg border border-slate-700">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Tự động lưu & Phân tích AI</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow">
+        
+        <!-- TOP ALERT / BANNER STATUS -->
+        <div id="status-card" class="mb-6 p-5 rounded-2xl border transition-all duration-300 shadow-sm">
+            <!-- Render động bằng JS -->
+        </div>
+
+        <!-- MAIN LAYOUT: 2 COLUMNS ON DESKTOP -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- LEFT COLUMN: FORM NHẬP LIỆU & LƯU THÁNG -->
+            <div class="lg:col-span-5 space-y-6">
+
+                <!-- CARD 1: FORM NHẬP THU NHẬP & CHI TIÊU -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-[#0F2043] flex items-center gap-2">
+                            <span>📝</span> Nhập Liệu Tháng Hiện Tại
+                        </h2>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="loadSampleData()" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg transition">
+                                Mẫu
+                            </button>
+                            <button type="button" onclick="resetForm()" class="text-xs font-semibold text-slate-500 hover:text-red-600 bg-slate-100 hover:bg-red-50 px-2.5 py-1.5 rounded-lg transition">
+                                Đặt lại
+                            </button>
+                        </div>
+                    </div>
+
+                    <form id="finance-form" class="space-y-4" onsubmit="event.preventDefault();">
+                        <!-- Chọn Tháng/Năm -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">📅 Tháng ghi nhận</label>
+                                <input type="month" id="selected-month" class="w-full h-11 px-3 border border-slate-300 rounded-xl text-sm focus-mint font-medium" onchange="onMonthChange()">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">📆 Ngày hiện tại</label>
+                                <input type="number" id="current-day" min="1" max="31" class="w-full h-11 px-3 border border-slate-300 rounded-xl text-sm focus-mint font-medium" placeholder="VD: 15" oninput="calculate()">
+                                <p id="err-current-day" class="text-xs text-red-500 mt-1 hidden"></p>
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-100">
+
+                        <!-- THU NHẬP (CHI TIẾT) -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">💰 Nguồn Thu Nhập (Hàng tháng)</label>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs text-slate-600 mb-1">Trợ cấp gia đình</label>
+                                    <div class="relative">
+                                        <input type="text" id="inc-allowance" class="w-full h-11 pl-3 pr-8 border border-slate-300 rounded-xl text-sm focus-mint font-semibold text-slate-800" placeholder="0" oninput="formatAndCalculate(this)">
+                                        <span class="absolute right-3 top-3 text-xs text-slate-400 font-bold">₫</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-600 mb-1">💼 Đi làm thêm</label>
+                                    <div class="relative">
+                                        <input type="text" id="inc-job" class="w-full h-11 pl-3 pr-8 border border-slate-300 rounded-xl text-sm focus-mint font-semibold text-slate-800" placeholder="0" oninput="formatAndCalculate(this)">
+                                        <span class="absolute right-3 top-3 text-xs text-slate-400 font-bold">₫</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-600 mb-1">🎖️ Học bổng</label>
+                                    <div class="relative">
+                                        <input type="text" id="inc-scholarship" class="w-full h-11 pl-3 pr-8 border border-slate-300 rounded-xl text-sm focus-mint font-semibold text-slate-800" placeholder="0" oninput="formatAndCalculate(this)">
+                                        <span class="absolute right-3 top-3 text-xs text-slate-400 font-bold">₫</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-600 mb-1">✨ Khác (thưởng, quà...)</label>
+                                    <div class="relative">
+                                        <input type="text" id="inc-other" class="w-full h-11 pl-3 pr-8 border border-slate-300 rounded-xl text-sm focus-mint font-semibold text-slate-800" placeholder="0" oninput="formatAndCalculate(this)">
+                                        <span class="absolute right-3 top-3 text-xs text-slate-400 font-bold">₫</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="border-slate-100">
+
+                        <!-- CHI TIÊU -->
+                        <div class="space-y-3">
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">💸 Khoản Chi Trong Tháng</label>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-slate-700 mb-1">🏠 Tiền trọ + Điện nước</label>
+                                <div class="relative">
+                                    <input type="text" id="exp-rent" class="w-full h-11 pl-3 pr-8 border border-slate-300 rounded-xl text-sm focus-mint font-semibold text-slate-800" placeholder="0" oninput="formatAndCalculate(this)">
+                                    <span class="absolute right-3 top-3 text-xs text-slate-400 font-bold">₫</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-700 mb-1">🍜 Tiền ăn uống cố định dự kiến</label>
+                                <div class="relative">
+                                    <input type="text" id="exp-food" class="w-full h-11 pl-3 pr-8 border border-slate-300 rounded-xl text-sm focus-mint font-semibold text-slate-800" placeholder="0" oninput="formatAndCalculate(this)">
+                                    <span class="absolute right-3 top-3 text-xs text-slate-400 font-bold">₫</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-700 mb-1">🛍️ Chi linh hoạt đã tiêu (Giải trí, mua sắm...)</label>
+                                <div class="relative">
+                                    <input type="text" id="exp-flexible" class="w-full h-11 pl-3 pr-8 border border-slate-300 rounded-xl text-sm focus-mint font-semibold text-slate-800" placeholder="0" oninput="formatAndCalculate(this)">
+                                    <span class="absolute right-3 top-3 text-xs text-slate-400 font-bold">₫</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-700 mb-1">🎯 Mục tiêu tiết kiệm tháng này</label>
+                                <div class="relative">
+                                    <input type="text" id="exp-savings-target" class="w-full h-11 pl-3 pr-8 border border-emerald-300 bg-emerald-50/30 rounded-xl text-sm focus-mint font-semibold text-emerald-800" placeholder="VD: 500.000" oninput="formatAndCalculate(this)">
+                                    <span class="absolute right-3 top-3 text-xs text-emerald-600 font-bold">₫</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nút lưu dữ liệu tháng -->
+                        <div class="pt-2">
+                            <button type="button" onclick="saveMonthHistory()" class="w-full h-11 bg-[#0F2043] hover:bg-slate-800 text-white font-semibold rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-2">
+                                <span>💾</span> Lưu Dữ Liệu Tháng Vào Lịch Sử
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- CARD: TƯ VẤN KẾ HOẠCH CHI TIÊU HỢP LÝ (QUY TẮC MẪU) -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h3 class="text-md font-bold text-[#0F2043] mb-3 flex items-center gap-2">
+                        <span>🎯</span> Kế Hoạch Chi Tiêu Gợi Ý (Sinh Viên)
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-3">Dựa trên tổng thu nhập <strong id="plan-total-inc" class="text-slate-700">0 ₫</strong> của bạn, đây là mô hình phân bổ ngân sách khuyến nghị:</p>
+                    
+                    <div id="recommended-plan-container" class="space-y-3">
+                        <!-- JS render phân bổ theo tỷ lệ sinh viên -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: STATS, CHARTS, SAVINGS & AI COACH & HISTORY -->
+            <div class="lg:col-span-7 space-y-6">
+
+                <!-- 4 CHỈ SỐ TÓM TẮT -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="stats-grid">
+                    <!-- Render từ JS -->
+                </div>
+
+                <!-- CARD: DỰ TÍNH TIẾT KIỆM TƯƠNG LAI -->
+                <div class="bg-gradient-to-br from-emerald-900 to-[#0F2043] text-white rounded-2xl p-5 shadow-md relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 opacity-10 text-8xl">🐷</div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="font-bold text-md text-emerald-300 flex items-center gap-2">
+                                    <span>🐷</span> Dự Tính Tiết Kiệm Tích Lũy
+                                </h3>
+                                <p class="text-xs text-slate-300">Tích lũy từ dư thừa thực tế & mục tiêu tiết kiệm</p>
+                            </div>
+                            <span id="savings-badge" class="px-2 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-lg text-xs font-semibold">
+                                Tốt
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3 my-3 text-center">
+                            <div class="bg-white/10 backdrop-blur px-2 py-2.5 rounded-xl">
+                                <span class="block text-[10px] text-slate-300 uppercase font-semibold">Tháng này</span>
+                                <span id="save-1m" class="text-sm sm:text-base font-bold text-emerald-300">0 ₫</span>
+                            </div>
+                            <div class="bg-white/10 backdrop-blur px-2 py-2.5 rounded-xl">
+                                <span class="block text-[10px] text-slate-300 uppercase font-semibold">Sau 6 tháng</span>
+                                <span id="save-6m" class="text-sm sm:text-base font-bold text-emerald-300">0 ₫</span>
+                            </div>
+                            <div class="bg-white/10 backdrop-blur px-2 py-2.5 rounded-xl">
+                                <span class="block text-[10px] text-slate-300 uppercase font-semibold">Sau 1 năm</span>
+                                <span id="save-12m" class="text-sm sm:text-base font-bold text-amber-300">0 ₫</span>
+                            </div>
+                        </div>
+                        <p id="savings-tip" class="text-xs text-slate-300 italic">Nhập dữ liệu thu chi để xem mô phỏng tích lũy.</p>
+                    </div>
+                </div>
+
+                <!-- BIỂU ĐỒ CHI TIÊU & BIỂU ĐỒ LỊCH SỬ THÁNG (2 TABS) -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+                        <h3 class="text-md font-bold text-[#0F2043] flex items-center gap-2">
+                            <span>📊</span> Phân Tích & So Sánh Chi Tiêu
+                        </h3>
+                        <!-- Tabs switch chart -->
+                        <div class="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+                            <button id="btn-tab-pie" onclick="switchChartTab('pie')" class="px-3 py-1.5 rounded-lg bg-white shadow-sm text-slate-800 transition">Cơ cấu tháng này</button>
+                            <button id="btn-tab-history" onclick="switchChartTab('history')" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition">So sánh các tháng</button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 1: Doughnut Chart -->
+                    <div id="chart-pie-container" class="relative h-64 w-full flex items-center justify-center">
+                        <canvas id="expenseChart"></canvas>
+                        <div id="empty-chart-msg" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 hidden">
+                            <span class="text-4xl mb-2">📊</span>
+                            <span class="text-xs font-medium">Chưa có dữ liệu chi tiêu để hiển thị biểu đồ</span>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: History Bar Chart -->
+                    <div id="chart-history-container" class="relative h-64 w-full hidden">
+                        <canvas id="historyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- AI BEHAVIORAL COACH CARD -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold shadow-sm">
+                            🤖
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-[#0F2043] text-md">AI Behavioral Coach</h3>
+                            <p class="text-xs text-slate-500">Trợ lý cố vấn chi tiêu riêng cho sinh viên</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-3">
+                        <p id="ai-coach-text" class="text-sm text-slate-700 leading-relaxed font-medium">
+                            Hãy nhập thông tin tài chính để nhận lời khuyên!
+                        </p>
+                    </div>
+
+                    <!-- Tags mẹo -->
+                    <div class="flex flex-wrap gap-2 mb-3" id="ai-coach-chips">
+                        <!-- Render chips động -->
+                    </div>
+
+                    <p class="text-[11px] text-slate-400 italic">💡 Lời khuyên dựa trên mô hình quản lý tài chính sinh viên Việt Nam và chỉ mang tính tham khảo.</p>
+                </div>
+
+                <!-- LỊCH SỬ CÁC THÁNG ĐÃ LƯU -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-md font-bold text-[#0F2043] flex items-center gap-2">
+                            <span>📜</span> Lịch Sử Chi Tiêu Các Tháng
+                        </h3>
+                        <span class="text-xs text-slate-400" id="history-count">0 tháng</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                                <tr>
+                                    <th class="py-2.5 px-3">Tháng</th>
+                                    <th class="py-2.5 px-3">Thu Nhập</th>
+                                    <th class="py-2.5 px-3">Tổng Chi</th>
+                                    <th class="py-2.5 px-3">Dư / Âm</th>
+                                    <th class="py-2.5 px-3 text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body" class="divide-y divide-slate-100">
+                                <!-- Render từ JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-8 text-center text-xs text-slate-500">
+        <p>AI-FinStudent Pro • Made for Vietnamese Students 💙</p>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC CORE -->
+    <script>
+        /* ==================== CONFIG & GLOBAL STATE ==================== */
+        const STORAGE_KEY_CURRENT = 'aifinstudent_current_v2';
+        const STORAGE_KEY_HISTORY = 'aifinstudent_history_v2';
+
+        let pieChartInstance = null;
+        let historyChartInstance = null;
+        let currentTab = 'pie';
+
+        /* state dữ liệu tính toán */
+        let state = {
+            month: new Date().toISOString().slice(0, 7),
+            currentDay: new Date().getDate(),
+            incAllowance: 0,
+            incJob: 0,
+            incScholarship: 0,
+            incOther: 0,
+            expRent: 0,
+            expFood: 0,
+            expFlexible: 0,
+            expSavingsTarget: 0
+        };
+
+        let monthHistory = [];
+
+        /* ==================== HELPER FUNCTIONS ==================== */
+        function formatVND(amount) {
+            return new Intl.NumberFormat('vi-VN').format(Math.round(amount || 0)) + ' ₫';
+        }
+
+        function parseNumber(valStr) {
+            if (!valStr) return 0;
+            const cleaned = valStr.toString().replace(/[^0-9]/g, '');
+            return parseInt(cleaned, 10) || 0;
+        }
+
+        function formatInputDisplay(val) {
+            const num = parseNumber(val);
+            return num === 0 ? '' : new Intl.NumberFormat('vi-VN').format(num);
+        }
+
+        function getDaysInMonth(year, monthIndex) {
+            return new Date(year, monthIndex + 1, 0).getDate();
+        }
+
+        function formatShortVND(num) {
+            if (Math.abs(num) >= 1000000) {
+                return (num / 1000000).toFixed(1).replace('.0', '') + 'tr';
+            } else if (Math.abs(num) >= 1000) {
+                return (num / 1000).toFixed(0) + 'k';
+            }
+            return num + 'đ';
+        }
+
+        /* ==================== INIT & EVENT HANDLERS ==================== */
+        window.addEventListener('DOMContentLoaded', () => {
+            initDates();
+            loadHistoryFromStorage();
+            loadCurrentFromStorage();
+            initCharts();
+            calculate();
+        });
+
+        function initDates() {
+            const now = new Date();
+            const yearStr = now.getFullYear();
+            const monthStr = String(now.getMonth() + 1).padStart(2, '0');
+            document.getElementById('selected-month').value = `${yearStr}-${monthStr}`;
+            document.getElementById('current-day').value = now.getDate();
+        }
+
+        function formatAndCalculate(inputEl) {
+            const cursorPosition = inputEl.selectionStart;
+            const rawVal = inputEl.value;
+            inputEl.value = formatInputDisplay(rawVal);
+            calculate();
+        }
+
+        function onMonthChange() {
+            calculate();
+        }
+
+        /* Read Input values to State */
+        function readInputs() {
+            const monthVal = document.getElementById('selected-month').value || new Date().toISOString().slice(0, 7);
+            const [y, m] = monthVal.split('-').map(Number);
+            const maxDays = getDaysInMonth(y, m - 1);
+            
+            let currentDay = parseInt(document.getElementById('current-day').value, 10) || 1;
+            const errDay = document.getElementById('err-current-day');
+            
+            if (currentDay < 1) {
+                currentDay = 1;
+                errDay.innerText = 'Ngày phải ≥ 1';
+                errDay.classList.remove('hidden');
+            } else if (currentDay > maxDays) {
+                currentDay = maxDays;
+                errDay.innerText = `Tháng ${m} tối đa ${maxDays} ngày`;
+                errDay.classList.remove('hidden');
+            } else {
+                errDay.classList.add('hidden');
+            }
+
+            state = {
+                month: monthVal,
+                currentDay: currentDay,
+                incAllowance: parseNumber(document.getElementById('inc-allowance').value),
+                incJob: parseNumber(document.getElementById('inc-job').value),
+                incScholarship: parseNumber(document.getElementById('inc-scholarship').value),
+                incOther: parseNumber(document.getElementById('inc-other').value),
+                expRent: parseNumber(document.getElementById('exp-rent').value),
+                expFood: parseNumber(document.getElementById('exp-food').value),
+                expFlexible: parseNumber(document.getElementById('exp-flexible').value),
+                expSavingsTarget: parseNumber(document.getElementById('exp-savings-target').value)
+            };
+
+            saveCurrentToStorage();
+        }
+
+        /* ==================== CALCULATION & RENDER ==================== */
+        function calculate() {
+            readInputs();
+
+            const totalIncome = state.incAllowance + state.incJob + state.incScholarship + state.incOther;
+            const fixedExpenses = state.expRent + state.expFood;
+            const totalSpentSoFar = fixedExpenses + state.expFlexible;
+
+            const [y, m] = state.month.split('-').map(Number);
+            const totalDaysInMonth = getDaysInMonth(y, m - 1);
+            const daysRemaining = Math.max(1, totalDaysInMonth - state.currentDay + 1);
+
+            const remainingFlexibleBudget = totalIncome - fixedExpenses - state.expFlexible;
+            const burnRate = remainingFlexibleBudget / daysRemaining;
+
+            const netBalance = totalIncome - totalSpentSoFar;
+
+            // Render giao diện
+            renderStatusCard(totalIncome, totalSpentSoFar, netBalance);
+            renderStatsCards(burnRate, remainingFlexibleBudget, daysRemaining, totalSpentSoFar, totalIncome);
+            renderSavingsForecast(netBalance, state.expSavingsTarget);
+            renderRecommendedPlan(totalIncome);
+            renderAICoach(totalIncome, totalSpentSoFar, remainingFlexibleBudget, burnRate, daysRemaining);
+            updatePieChart(state.expRent, state.expFood, state.expFlexible, remainingFlexibleBudget);
+        }
+
+        /* 1. STATUS CARD */
+        function renderStatusCard(income, totalSpent, netBalance) {
+            const card = document.getElementById('status-card');
+            if (income === 0 && totalSpent === 0) {
+                card.className = "mb-6 p-5 rounded-2xl border bg-slate-100 border-slate-300 text-slate-600 shadow-sm";
+                card.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">👋</span>
+                        <div>
+                            <h3 class="font-bold text-md text-slate-800">Chào bạn! Hãy nhập thông tin thu chi bên dưới</h3>
+                            <p class="text-xs">Công cụ sẽ lập tức tính toán hạn mức chi tiêu an toàn theo ngày cho bạn.</p>
+                        </div>
+                    </div>`;
+                return;
+            }
+
+            const pctSpent = income > 0 ? Math.min(100, Math.round((totalSpent / income) * 100)) : 100;
+
+            if (netBalance < 0) {
+                // Thâm hụt
+                card.className = "mb-6 p-5 rounded-2xl border bg-red-50 border-red-200 text-red-900 shadow-sm";
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">🔴</span>
+                            <div>
+                                <h3 class="font-bold text-base flex items-center gap-2">
+                                    THÂM HỤT NGÂN SÁCH! (Đang âm ${formatVND(Math.abs(netBalance))})
+                                </h3>
+                                <p class="text-xs text-red-700 mt-0.5">Tổng chi tiêu đã vượt quá tổng thu nhập. Cần điều chỉnh khẩn cấp!</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold px-3 py-1 bg-red-200 text-red-800 rounded-full w-fit">Cảnh báo đỏ</span>
+                    </div>
+                    <div class="w-full bg-red-200 h-2.5 rounded-full mt-4 overflow-hidden">
+                        <div class="bg-red-600 h-2.5 rounded-full transition-all duration-500" style="width: ${pctSpent}%"></div>
+                    </div>
+                    <div class="flex justify-between text-[11px] text-red-700 font-semibold mt-1">
+                        <span>Đã tiêu: ${formatVND(totalSpent)}</span>
+                        <span>Thu nhập: ${formatVND(income)} (${pctSpent}%)</span>
+                    </div>
+                `;
+            } else if (netBalance <= income * 0.1) {
+                // Cân bằng / Báo động nhẹ
+                card.className = "mb-6 p-5 rounded-2xl border bg-amber-50 border-amber-200 text-amber-900 shadow-sm";
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">🟡</span>
+                            <div>
+                                <h3 class="font-bold text-base flex items-center gap-2">
+                                    NGÂN SÁCH SÁT NGƯỠNG BÁO ĐỘNG (Dư ít: ${formatVND(netBalance)})
+                                </h3>
+                                <p class="text-xs text-amber-800 mt-0.5">Khoản dư còn lại dưới 10% thu nhập. Hãy thắt chặt chi tiêu linh hoạt!</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold px-3 py-1 bg-amber-200 text-amber-800 rounded-full w-fit">Cần cẩn trọng</span>
+                    </div>
+                    <div class="w-full bg-amber-200 h-2.5 rounded-full mt-4 overflow-hidden">
+                        <div class="bg-amber-500 h-2.5 rounded-full transition-all duration-500" style="width: ${pctSpent}%"></div>
+                    </div>
+                    <div class="flex justify-between text-[11px] text-amber-800 font-semibold mt-1">
+                        <span>Đã tiêu: ${formatVND(totalSpent)}</span>
+                        <span>Thu nhập: ${formatVND(income)} (${pctSpent}%)</span>
+                    </div>
+                `;
+            } else {
+                // Thặng dư
+                card.className = "mb-6 p-5 rounded-2xl border bg-emerald-50 border-emerald-200 text-emerald-950 shadow-sm";
+                card.innerHTML = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">🟢</span>
+                            <div>
+                                <h3 class="font-bold text-base text-emerald-900 flex items-center gap-2">
+                                    THẶNG DƯ TỐT! (Đang dư ${formatVND(netBalance)})
+                                </h3>
+                                <p class="text-xs text-emerald-700 mt-0.5">Tài chính của bạn đang rất an toàn. Hãy tiếp tục duy trì và trích quỹ tiết kiệm!</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold px-3 py-1 bg-emerald-200 text-emerald-800 rounded-full w-fit">An toàn</span>
+                    </div>
+                    <div class="w-full bg-emerald-200 h-2.5 rounded-full mt-4 overflow-hidden">
+                        <div class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: ${pctSpent}%"></div>
+                    </div>
+                    <div class="flex justify-between text-[11px] text-emerald-800 font-semibold mt-1">
+                        <span>Đã tiêu: ${formatVND(totalSpent)}</span>
+                        <span>Thu nhập: ${formatVND(income)} (${pctSpent}%)</span>
+                    </div>
+                `;
+            }
+        }
+
+        /* 2. STATS CARDS */
+        function renderStatsCards(burnRate, remainingBudget, daysRemaining, totalSpent, totalIncome) {
+            const grid = document.getElementById('stats-grid');
+            const burnRateColor = burnRate < 30000 ? 'text-red-600' : (burnRate < 70000 ? 'text-amber-600' : 'text-emerald-600');
+            const pct = totalIncome > 0 ? Math.round((totalSpent / totalIncome) * 100) : 0;
+
+            grid.innerHTML = `
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wide block mb-1">🔥 Burn Rate / Ngày</span>
+                    <span class="text-base sm:text-xl font-extrabold ${burnRateColor} block truncate">${formatVND(burnRate)}</span>
+                    <span class="text-[10px] text-slate-500">Hạn mức chi tiêu mỗi ngày</span>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wide block mb-1">💰 Linh Hoạt Còn Lại</span>
+                    <span class="text-base sm:text-xl font-bold text-slate-800 block truncate">${formatVND(remainingBudget)}</span>
+                    <span class="text-[10px] text-slate-500">Ngân sách chưa dùng</span>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wide block mb-1">⏳ Số Ngày Còn Lại</span>
+                    <span class="text-base sm:text-xl font-bold text-slate-800 block">${daysRemaining} ngày</span>
+                    <span class="text-[10px] text-slate-500">Tính cả hôm nay</span>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wide block mb-1">📊 Tổng Đã Chi</span>
+                    <span class="text-base sm:text-xl font-bold text-slate-800 block truncate">${formatVND(totalSpent)}</span>
+                    <span class="text-[10px] text-slate-500">Bằng ${pct}% thu nhập</span>
+                </div>
+            `;
+        }
+
+        /* 3. DỰ TÍNH TIẾT KIỆM */
+        function renderSavingsForecast(netBalance, savingsTarget) {
+            // Tiết kiệm khả thi mỗi tháng = Max(0, netBalance) hoặc Target nếu netBalance > target
+            const monthlySavePotential = Math.max(0, netBalance);
+            const m1 = monthlySavePotential;
+            const m6 = monthlySavePotential * 6;
+            const m12 = monthlySavePotential * 12;
+
+            document.getElementById('save-1m').innerText = formatVND(m1);
+            document.getElementById('save-6m').innerText = formatVND(m6);
+            document.getElementById('save-12m').innerText = formatVND(m12);
+
+            const badge = document.getElementById('savings-badge');
+            const tip = document.getElementById('savings-tip');
+
+            if (monthlySavePotential <= 0) {
+                badge.className = "px-2 py-1 bg-red-500/20 text-red-300 border border-red-400/30 rounded-lg text-xs font-semibold";
+                badge.innerText = "Chưa tích lũy";
+                tip.innerText = "💡 Bạn đang chi tiêu vượt thu nhập. Hãy thắt chặt chi tiêu để có tiền tích lũy.";
+            } else if (savingsTarget > 0 && monthlySavePotential < savingsTarget) {
+                badge.className = "px-2 py-1 bg-amber-500/20 text-amber-300 border border-amber-400/30 rounded-lg text-xs font-semibold";
+                badge.innerText = "Cần cố gắng";
+                tip.innerText = `💡 Mục tiêu của bạn là ${formatVND(savingsTarget)}/tháng. Hiện tại thực tế dư ${formatVND(monthlySavePotential)}.`;
+            } else {
+                badge.className = "px-2 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-lg text-xs font-semibold";
+                badge.innerText = "Đạt mục tiêu";
+                tip.innerText = `🎉 Tuyệt vời! Bạn có thể tích lũy được ${formatVND(m12)} sau 1 năm nếu duy trì mức dư này.`;
+            }
+        }
+
+        /* 4. TƯ VẤN KẾ HOẠCH CHI TIÊU HỢP LÝ CHO SINH VIÊN */
+        function renderRecommendedPlan(totalIncome) {
+            const container = document.getElementById('recommended-plan-container');
+            document.getElementById('plan-total-inc').innerText = formatVND(totalIncome);
+
+            if (totalIncome === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 italic">Nhập thu nhập để xem mô hình phân bổ gợi ý.</p>`;
+                return;
+            }
+
+            // Quy tắc phù hợp sinh viên Việt Nam: 50% Thiết yếu (Ăn/Trọ), 30% Linh hoạt (Đi lại, học tập, giải trí), 20% Tiết kiệm/Dự phòng
+            const essential = totalIncome * 0.50;
+            const flex = totalIncome * 0.30;
+            const savings = totalIncome * 0.20;
+
+            container.innerHTML = `
+                <div class="space-y-2 text-xs">
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-slate-700 block">🏠 🍜 Thiết yếu (50%)</span>
+                            <span class="text-[11px] text-slate-500">Tiền trọ, điện nước, ăn uống cơ bản</span>
+                        </div>
+                        <span class="font-bold text-slate-800">${formatVND(essential)}</span>
+                    </div>
+
+                    <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-slate-700 block">🛍️ ☕ Linh hoạt & Giao tiếp (30%)</span>
+                            <span class="text-[11px] text-slate-500">Xăng xe, sách vở, cà phê, giải trí</span>
+                        </div>
+                        <span class="font-bold text-slate-800">${formatVND(flex)}</span>
+                    </div>
+
+                    <div class="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 flex justify-between items-center text-emerald-900">
+                        <div>
+                            <span class="font-bold block">🐷 Tiết kiệm & Quỹ dự phòng (20%)</span>
+                            <span class="text-[11px] text-emerald-700">Dành cho ốm đau, học phí, tương lai</span>
+                        </div>
+                        <span class="font-bold text-emerald-800">${formatVND(savings)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        /* 5. AI BEHAVIORAL COACH LOGIC */
+        function renderAICoach(income, totalSpent, remainingBudget, burnRate, daysRemaining) {
+            const coachText = document.getElementById('ai-coach-text');
+            const coachChips = document.getElementById('ai-coach-chips');
+
+            if (income === 0 && totalSpent === 0) {
+                coachText.innerText = "Chào sinh viên! Nhập mức thu nhập và các khoản chi để mình đưa ra phân tích hành vi và lời khuyên tối ưu nhất nhé!";
+                coachChips.innerHTML = `
+                    <span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs">💡 Nhập thu nhập</span>
+                    <span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs">📝 Ghi chép mỗi ngày</span>
+                `;
+                return;
+            }
+
+            let advice = "";
+            let chips = [];
+
+            if (totalSpent > income) {
+                const deficit = totalSpent - income;
+                advice = `🔴 **Cảnh báo nghiêm túc:** Em đang tiêu vượt thu nhập **${formatShortVND(deficit)}**! Nếu tiếp tục, em sẽ phải vay mượn hoặc rỗng túi cuối tháng. Hãy ngừng ngay các khoản mua sắm giải trí chưa cần thiết!`;
+                chips = ["🚫 Ngừng mua sắm linh hoạt", "🍳 Tự nấu ăn tại phòng", "💼 Tìm công việc làm thêm"];
+            } else if (burnRate < 0) {
+                advice = `⚠️ Ngân sách linh hoạt đã cạn sạch! Trong **${daysRemaining} ngày** tới, em chỉ nên chi cho nhu cầu sinh tồn tối thiểu.`;
+                chips = ["🍲 Ăn cơm tiệm bình dân", "☕ Cắt bớt trà sữa", "🚶 Tiết kiệm xăng xe"];
+            } else if (burnRate < 30000) {
+                advice = `🚨 **Báo động đỏ:** Hạn mức chi của em chỉ còn **${formatVND(burnRate)}/ngày** cho ${daysRemaining} ngày còn lại. Rất thắt chặt! Hãy ưu tiên tự nấu ăn và tạm hoãn các buổi hẹn hò ăn uống đắt đỏ.`;
+                chips = ["🛒 Đi chợ mua đồ nấu 3-4 ngày", "🚫 Hạn chế ăn ngoài", "📌 Chi tiêu dưới 30k/ngày"];
+            } else if (burnRate < 70000) {
+                advice = `📉 **Thắt chặt:** Em còn **${formatVND(burnRate)}/ngày** trong ${daysRemaining} ngày tới. Mức này vừa đủ cho các bữa ăn bình dân. Hãy giữ vững kỷ luật tài chính!`;
+                chips = ["🍱 Cơm sinh viên 25-30k", "💧 Mang nước theo đi học", "📊 Ghi chép chi tiêu daily"];
+            } else if (burnRate < 150000) {
+                advice = `⚖️ **Ổn định:** Ngân sách an toàn **${formatVND(burnRate)}/ngày** trong ${daysRemaining} ngày tới. Em đang kiểm soát khá tốt, hãy tiếp tục duy trì quy tắc 50/30/20 nhé.`;
+                chips = ["👍 Duy trì nhịp độ", "🎯 Trích nhỏ quỹ tiết kiệm", "🎁 Dùng ưu đãi sinh viên"];
+            } else {
+                advice = `🎉 **Thoải mái:** Ngân sách còn dư dả **${formatVND(burnRate)}/ngày**! Đừng quên trích ngay 20% khoản dư thừa này vào tài khoản tiết kiệm hoặc quỹ khẩn cấp trước khi tiêu hết nhé.`;
+                chips = ["🐷 Trích 20% tiết kiệm", "📚 Đầu tư học tập/kỹ năng", "✨ Tự thưởng hợp lý"];
+            }
+
+            // Hiệu ứng giả lập gõ chữ nhẹ
+            coachText.classList.add('typing-effect');
+            coachText.innerText = advice;
+            setTimeout(() => coachText.classList.remove('typing-effect'), 500);
+
+            coachChips.innerHTML = chips.map(c => `<span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold">${c}</span>`).join('');
+        }
+
+        /* ==================== CHARTS (CHART.JS) ==================== */
+        function initCharts() {
+            // 1. Doughnut Chart
+            const ctxPie = document.getElementById('expenseChart').getContext('2d');
+            pieChartInstance = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Tiền trọ', 'Ăn uống', 'Linh hoạt đã dùng', 'Còn lại'],
+                    datasets: [{
+                        data: [0, 0, 0, 1],
+                        backgroundColor: ['#0F2043', '#3B82F6', '#EF4444', '#10B981'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw || 0;
+                                    return ` ${context.label}: ${formatVND(val)}`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+
+            // 2. Bar Chart (Lịch sử)
+            const ctxHistory = document.getElementById('historyChart').getContext('2d');
+            historyChartInstance = new Chart(ctxHistory, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Thu nhập', data: [], backgroundColor: '#10B981', borderRadius: 6 },
+                        { label: 'Tổng chi', data: [], backgroundColor: '#EF4444', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` ${ctx.dataset.label}: ${formatVND(ctx.raw)}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: (val) => formatShortVND(val)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updatePieChart(rent, food, flexible, remaining) {
+            if (!pieChartInstance) return;
+
+            const emptyMsg = document.getElementById('empty-chart-msg');
+            const total = rent + food + flexible + Math.max(0, remaining);
+
+            if (total === 0) {
+                emptyMsg.classList.remove('hidden');
+                pieChartInstance.data.datasets[0].data = [0, 0, 0, 1];
+                pieChartInstance.data.datasets[0].backgroundColor = ['#E2E8F0', '#E2E8F0', '#E2E8F0', '#E2E8F0'];
+            } else {
+                emptyMsg.classList.add('hidden');
+                pieChartInstance.data.datasets[0].data = [rent, food, flexible, Math.max(0, remaining)];
+                pieChartInstance.data.datasets[0].backgroundColor = ['#0F2043', '#3B82F6', '#F59E0B', '#10B981'];
+            }
+            pieChartInstance.update();
+        }
+
+        function switchChartTab(tab) {
+            currentTab = tab;
+            const btnPie = document.getElementById('btn-tab-pie');
+            const btnHist = document.getElementById('btn-tab-history');
+            const pieCont = document.getElementById('chart-pie-container');
+            const histCont = document.getElementById('chart-history-container');
+
+            if (tab === 'pie') {
+                btnPie.className = "px-3 py-1.5 rounded-lg bg-white shadow-sm text-slate-800 transition";
+                btnHist.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition";
+                pieCont.classList.remove('hidden');
+                histCont.classList.add('hidden');
+            } else {
+                btnHist.className = "px-3 py-1.5 rounded-lg bg-white shadow-sm text-slate-800 transition";
+                btnPie.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition";
+                histCont.classList.remove('hidden');
+                pieCont.classList.add('hidden');
+                renderHistoryChart();
+            }
+        }
+
+        function renderHistoryChart() {
+            if (!historyChartInstance) return;
+            // Sắp xếp lịch sử theo tháng tăng dần
+            const sorted = [...monthHistory].sort((a, b) => a.month.localeCompare(b.month));
+
+            historyChartInstance.data.labels = sorted.map(item => item.month);
+            historyChartInstance.data.datasets[0].data = sorted.map(item => item.income);
+            historyChartInstance.data.datasets[1].data = sorted.map(item => item.expense);
+            historyChartInstance.update();
+        }
+
+        /* ==================== LOCAL STORAGE & HISTORY MANAGEMENT ==================== */
+        function saveCurrentToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY_CURRENT, JSON.stringify(state));
+            } catch (e) { console.error(e); }
+        }
+
+        function loadCurrentFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY_CURRENT);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    document.getElementById('selected-month').value = parsed.month || state.month;
+                    document.getElementById('current-day').value = parsed.currentDay || state.currentDay;
+                    
+                    document.getElementById('inc-allowance').value = formatInputDisplay(parsed.incAllowance);
+                    document.getElementById('inc-job').value = formatInputDisplay(parsed.incJob);
+                    document.getElementById('inc-scholarship').value = formatInputDisplay(parsed.incScholarship);
+                    document.getElementById('inc-other').value = formatInputDisplay(parsed.incOther);
+
+                    document.getElementById('exp-rent').value = formatInputDisplay(parsed.expRent);
+                    document.getElementById('exp-food').value = formatInputDisplay(parsed.expFood);
+                    document.getElementById('exp-flexible').value = formatInputDisplay(parsed.expFlexible);
+                    document.getElementById('exp-savings-target').value = formatInputDisplay(parsed.expSavingsTarget);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function saveMonthHistory() {
+            readInputs();
+            const totalInc = state.incAllowance + state.incJob + state.incScholarship + state.incOther;
+            const totalExp = state.expRent + state.expFood + state.expFlexible;
+
+            if (totalInc === 0 && totalExp === 0) {
+                alert("Vui lòng nhập dữ liệu thu chi trước khi lưu lịch sử!");
+                return;
+            }
+
+            const record = {
+                month: state.month,
+                income: totalInc,
+                expense: totalExp,
+                net: totalInc - totalExp,
+                details: { ...state }
+            };
+
+            // Kiểm tra trùng tháng thì cập nhật
+            const idx = monthHistory.findIndex(h => h.month === state.month);
+            if (idx >= 0) {
+                monthHistory[idx] = record;
+            } else {
+                monthHistory.push(record);
+            }
+
+            // Sắp xếp giảm dần theo tháng
+            monthHistory.sort((a, b) => b.month.localeCompare(a.month));
+
+            try {
+                localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(monthHistory));
+                renderHistoryTable();
+                if (currentTab === 'history') renderHistoryChart();
+                alert(`Đã lưu thành công dữ liệu tài chính cho tháng ${state.month}!`);
+            } catch (e) { console.error(e); }
+        }
+
+        function loadHistoryFromStorage() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY_HISTORY);
+                if (saved) {
+                    monthHistory = JSON.parse(saved);
+                } else {
+                    // Dữ liệu mẫu tháng trước nếu chưa có
+                    monthHistory = [
+                        { month: '2026-08', income: 4500000, expense: 4200000, net: 300000 },
+                        { month: '2026-09', income: 5200000, expense: 4600000, net: 600000 }
+                    ];
+                }
+                renderHistoryTable();
+            } catch (e) { console.error(e); }
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('history-table-body');
+            document.getElementById('history-count').innerText = `${monthHistory.length} tháng`;
+
+            if (monthHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-slate-400">Chưa có lịch sử tháng nào được lưu.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = monthHistory.map((item, index) => {
+                const netClass = item.net >= 0 ? 'text-emerald-600 font-bold' : 'text-red-600 font-bold';
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-2.5 px-3 font-semibold text-slate-700">${item.month}</td>
+                        <td class="py-2.5 px-3 font-medium text-slate-600">${formatVND(item.income)}</td>
+                        <td class="py-2.5 px-3 font-medium text-slate-600">${formatVND(item.expense)}</td>
+                        <td class="py-2.5 px-3 ${netClass}">${formatVND(item.net)}</td>
+                        <td class="py-2.5 px-3 text-right">
+                            <button onclick="deleteHistoryItem(${index})" class="text-xs text-red-500 hover:text-red-700 font-semibold">Xóa</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function deleteHistoryItem(index) {
+            if (confirm("Bạn có chắc chắn muốn xóa bản ghi tháng này khỏi lịch sử?")) {
+                monthHistory.splice(index, 1);
+                try {
+                    localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(monthHistory));
+                    renderHistoryTable();
+                    if (currentTab === 'history') renderHistoryChart();
+                } catch (e) { console.error(e); }
+            }
+        }
+
+        /* ==================== UTILITY BUTTONS ==================== */
+        function loadSampleData() {
+            document.getElementById('inc-allowance').value = '3.500.000';
+            document.getElementById('inc-job').value = '1.500.000';
+            document.getElementById('inc-scholarship').value = '1.000.000';
+            document.getElementById('inc-other').value = '0';
+
+            document.getElementById('exp-rent').value = '1.500.000';
+            document.getElementById('exp-food').value = '1.800.000';
+            document.getElementById('exp-flexible').value = '800.000';
+            document.getElementById('exp-savings-target').value = '500.000';
+
+            document.getElementById('current-day').value = 15;
+
+            calculate();
+        }
+
+        function resetForm() {
+            if (confirm("Bạn muốn đặt lại tất cả các ô nhập liệu?")) {
+                document.getElementById('finance-form').reset();
+                initDates();
+                calculate();
+            }
+        }
+    </script>
+</body>
+</html>
